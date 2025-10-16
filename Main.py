@@ -1,33 +1,20 @@
-import requests
-from bs4 import BeautifulSoup
-import json
+# main.py
+from extraer_urls import extraer_todas_las_paginas
+from extraer_fichas import extraer_fichas_desde_lista
 
-URL = "https://ecuador.patiotuerca.com/usados/-/autos"
-HEADERS = {"User-Agent": "Mozilla/5.0"}
+if __name__ == "__main__":
+    print("\n🚗 Iniciando scraping completo...\n")
 
-def extraer_urls_vehiculos(url):
-    r = requests.get(url, headers=HEADERS)
-    soup = BeautifulSoup(r.text, "html.parser")
+    # Paso 1: obtener todas las URLs
+    urls = extraer_todas_las_paginas(num_paginas=1, pausa=2)
 
-    urls = []
-    for script in soup.find_all("script", {"type": "application/ld+json"}):
-        try:
-            data = json.loads(script.string)
-            
-            # Algunos scripts tienen listas, otros un solo objeto
-            if isinstance(data, list):
-                for item in data:
-                    if item.get("@type") == "Car" and "url" in item:
-                        urls.append(item["url"])
-            elif data.get("@type") == "Car" and "url" in data:
-                urls.append(data["url"])
-        except Exception:
-            continue
+    print(f"\n🔹 Total de URLs encontradas: {len(urls)}\n")
 
-    return urls
+    # Paso 2: extraer fichas técnicas y guardar en JSON
+    resultados = extraer_fichas_desde_lista(
+        urls,
+        pausa=4,
+        salida_json="fichas_autos.json"
+    )
 
-# Ejecutar
-urls_autos = extraer_urls_vehiculos(URL)
-print(f"Encontradas {len(urls_autos)} URLs de vehículos:")
-for u in urls_autos[:10]: #Cambiar esto para mostrar en el print todos los links
-    print("➡️", u)
+    print(f"\n🏁 Proceso completado. {len(resultados)} fichas guardadas exitosamente.")

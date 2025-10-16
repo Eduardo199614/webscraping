@@ -1,0 +1,562 @@
+[
+  {
+    "Data": [
+      {
+        "Año": "2012",
+        "Precio": "$9.400",
+        "Marca": "Citroen",
+        "Modelo": "Berlingo",
+        "Kilometraje": "161000 Kms",
+        "Motor(cilindraje)": "1900",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.877,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2009",
+        "Precio": "$10.500",
+        "Marca": "Kia",
+        "Modelo": "Sportage Active",
+        "Kilometraje": "290000 Kms",
+        "Motor(cilindraje)": "2000",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.933,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2024",
+        "Precio": "$16.900",
+        "Marca": "Suzuki",
+        "Modelo": "Swift",
+        "Kilometraje": "40000 Kms",
+        "Motor(cilindraje)": "1200",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.812,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2021",
+        "Precio": "$22.000",
+        "Marca": "Peugeot",
+        "Modelo": "3008N ACT",
+        "Kilometraje": "121000 Kms",
+        "Motor(cilindraje)": null,
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "No se pudo obtener: Motor(cilindraje)",
+    "TiempoEjecucion": 0.823,
+    "ejecucion": false
+  },
+  {
+    "Data": [
+      {
+        "Año": "2025",
+        "Precio": "$15.900",
+        "Marca": "Chery",
+        "Modelo": "TIGGO 2 PRO",
+        "Kilometraje": "9000 Kms",
+        "Motor(cilindraje)": "1500",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.911,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2022",
+        "Precio": "$26.900",
+        "Marca": "Peugeot",
+        "Modelo": "3008",
+        "Kilometraje": "44000 Kms",
+        "Motor(cilindraje)": null,
+        "Transmisión": null
+      }
+    ],
+    "mensaje": "No se pudo obtener: Motor(cilindraje), Transmisión",
+    "TiempoEjecucion": 0.981,
+    "ejecucion": false
+  },
+  {
+    "Data": [
+      {
+        "Año": "2024",
+        "Precio": "$41.000",
+        "Marca": "Kia",
+        "Modelo": "EV6",
+        "Kilometraje": "20276 Kms",
+        "Motor(cilindraje)": "0",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.867,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2010",
+        "Precio": "$11.500",
+        "Marca": "Ford",
+        "Modelo": "Escape Hibrido",
+        "Kilometraje": "220 Kms",
+        "Motor(cilindraje)": "2500",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.87,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2025",
+        "Precio": "$19.999",
+        "Marca": "Kia",
+        "Modelo": "K3 X-LINE",
+        "Kilometraje": "16333 Kms",
+        "Motor(cilindraje)": "1400",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.113,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2021",
+        "Precio": "$69.000",
+        "Marca": "Ford",
+        "Modelo": "Explorer Limited",
+        "Kilometraje": "35000 Kms",
+        "Motor(cilindraje)": "2000",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.661,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2020",
+        "Precio": "$18.400",
+        "Marca": "Great Wall",
+        "Modelo": "HAVAL H6 SUPREME",
+        "Kilometraje": "75000 Kms",
+        "Motor(cilindraje)": "2000",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.154,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2023",
+        "Precio": "$28.750",
+        "Marca": "Toyota",
+        "Modelo": "C-HR ACTIVE HIBRID",
+        "Kilometraje": "49000 Kms",
+        "Motor(cilindraje)": "1800",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.055,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2014",
+        "Precio": "$14.900",
+        "Marca": "Jeep",
+        "Modelo": "Compass Sport",
+        "Kilometraje": "181000 Kms",
+        "Motor(cilindraje)": "2400",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.941,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2024",
+        "Precio": "$22.900",
+        "Marca": "Chery",
+        "Modelo": "Tiggo 8 1.5 TM 4x2",
+        "Kilometraje": "35000 Kms",
+        "Motor(cilindraje)": "1500",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.873,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2018",
+        "Precio": "$20.900",
+        "Marca": "Volkswagen",
+        "Modelo": "Tiguan",
+        "Kilometraje": "87000 Kms",
+        "Motor(cilindraje)": "2000",
+        "Transmisión": "Tiptronic"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.292,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2008",
+        "Precio": "$10.200",
+        "Marca": "Ford",
+        "Modelo": "Escape",
+        "Kilometraje": "290000 Kms",
+        "Motor(cilindraje)": "3000",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.194,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2019",
+        "Precio": "$34.900",
+        "Marca": "Chevrolet",
+        "Modelo": "TrailBlazer DSL LTZ TA 2.8",
+        "Kilometraje": "164000 Kms",
+        "Motor(cilindraje)": "2800",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.924,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2011",
+        "Precio": "$20.999",
+        "Marca": "Mazda",
+        "Modelo": "BT-50 CD 4x4 Diesel",
+        "Kilometraje": "175000 Kms",
+        "Motor(cilindraje)": "2500",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.398,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2020",
+        "Precio": "$20.900",
+        "Marca": "Mazda",
+        "Modelo": "CX-3 ENTRY",
+        "Kilometraje": "93824 Kms",
+        "Motor(cilindraje)": "2000",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.248,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2024",
+        "Precio": "$40.500",
+        "Marca": "Nissan",
+        "Modelo": "X-trail Epower Exclusive e-4ORCE EV",
+        "Kilometraje": "28000 Kms",
+        "Motor(cilindraje)": "1499",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.04,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2018",
+        "Precio": "$14.890",
+        "Marca": "Toyota",
+        "Modelo": "Prius Hybrido",
+        "Kilometraje": "120000 Kms",
+        "Motor(cilindraje)": "1500",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.126,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2021",
+        "Precio": "$18.500",
+        "Marca": "Ford",
+        "Modelo": "TERRITORY TREND",
+        "Kilometraje": "100000 Kms",
+        "Motor(cilindraje)": "1500",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.113,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2020",
+        "Precio": "$22.500",
+        "Marca": "Peugeot",
+        "Modelo": "3008",
+        "Kilometraje": "150000 Kms",
+        "Motor(cilindraje)": "1600",
+        "Transmisión": "Secuencial"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.003,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2017",
+        "Precio": "$15.000",
+        "Marca": "Volkswagen",
+        "Modelo": "New Jetta",
+        "Kilometraje": "132000 Kms",
+        "Motor(cilindraje)": "2500",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.964,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2020",
+        "Precio": "$20.900",
+        "Marca": "Mazda",
+        "Modelo": "CX-3 ENTRY",
+        "Kilometraje": "93824 Kms",
+        "Motor(cilindraje)": "2000",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.959,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2019",
+        "Precio": "$37.846",
+        "Marca": "Mazda",
+        "Modelo": "CX-9",
+        "Kilometraje": "102000 Kms",
+        "Motor(cilindraje)": "3200",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.042,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2025",
+        "Precio": "$19.999",
+        "Marca": "Kia",
+        "Modelo": "K3 X-LINE",
+        "Kilometraje": "19356 Kms",
+        "Motor(cilindraje)": "1400",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.882,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2019",
+        "Precio": "$67.000",
+        "Marca": "Chevrolet",
+        "Modelo": "Camaro",
+        "Kilometraje": "38000 Kms",
+        "Motor(cilindraje)": "3600",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.978,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2015",
+        "Precio": "$63.000",
+        "Marca": "Porsche",
+        "Modelo": "Macan S",
+        "Kilometraje": "37000 Kms",
+        "Motor(cilindraje)": null,
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "No se pudo obtener: Motor(cilindraje)",
+    "TiempoEjecucion": 0.973,
+    "ejecucion": false
+  },
+  {
+    "Data": [
+      {
+        "Año": "2019",
+        "Precio": "$12.990",
+        "Marca": "Peugeot",
+        "Modelo": "301",
+        "Kilometraje": "123000 Kms",
+        "Motor(cilindraje)": "1600",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.87,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2026",
+        "Precio": "$22.470",
+        "Marca": "Kia",
+        "Modelo": "Sonet",
+        "Kilometraje": "4625 Kms",
+        "Motor(cilindraje)": "1500",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.865,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2019",
+        "Precio": "$34.500",
+        "Marca": "Mercedes Benz",
+        "Modelo": "GLA 180",
+        "Kilometraje": "50000 Kms",
+        "Motor(cilindraje)": "1600",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.838,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2018",
+        "Precio": "$17.490",
+        "Marca": "Chevrolet",
+        "Modelo": "Equinox",
+        "Kilometraje": "70000 Kms",
+        "Motor(cilindraje)": "2500",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.102,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2016",
+        "Precio": "$12.400",
+        "Marca": "Great Wall",
+        "Modelo": "H5",
+        "Kilometraje": "130000 Kms",
+        "Motor(cilindraje)": "2400",
+        "Transmisión": "Manual"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 1.006,
+    "ejecucion": true
+  },
+  {
+    "Data": [
+      {
+        "Año": "2022",
+        "Precio": "$80.900",
+        "Marca": "Mercedes Benz",
+        "Modelo": "E 53 AMG",
+        "Kilometraje": "3200 Kms",
+        "Motor(cilindraje)": "3000",
+        "Transmisión": "Automática"
+      }
+    ],
+    "mensaje": "Datos obtenidos correctamente",
+    "TiempoEjecucion": 0.883,
+    "ejecucion": true
+  }
+]
