@@ -81,46 +81,6 @@ def extraer_multiples_anios(anios, num_paginas=3, pausa=2):
     
     return resultados
 
-def extraer_todas_las_paginas(num_paginas=5, pausa=2):
-    """Extrae URLs de múltiples páginas de resultados."""
-    todas_urls = []
-
-    for i in range(1, num_paginas + 1):
-        if i == 1:
-            url_pagina = URL_BASE
-        else:
-            codigo = generar_codigo_base64(i - 1)
-            url_pagina = f"{URL_BASE}?page={codigo}"
-
-        print(f"🔎 Extrayendo página {i} → {url_pagina}")
-        urls = extraer_urls_vehiculos(url_pagina)
-
-        if not urls:
-            print("⚠️ No se encontraron más resultados, deteniendo.")
-            break
-
-        todas_urls.extend(urls)
-        print(f"✅ {len(urls)} vehículos encontrados en la página {i}\n")
-        time.sleep(pausa)
-
-    return todas_urls
-
-
-if __name__ == "__main__":
-    # Prueba rápida
-    todas = extraer_todas_las_paginas(num_paginas=3)
-    print(f"\n🔹 Total de URLs encontradas: {len(todas)}")
-    for u in todas[:10]:
-        print("➡️", u)
-
-# Ejemplo 1: Un solo año
-    print("\n📅 EJEMPLO 1: Un solo año")
-    vehiculos_2023 = extraer_vehiculos_por_anio(2023, num_paginas=2)
-    
-    print(f"\n🔹 Vehículos encontrados: {len(vehiculos_2023)}")
-    for url in vehiculos_2023[:3]:  # Mostrar primeros 3
-        print(f"➡️ {url}")
-    
     # Ejemplo 2: Múltiples años
     print("\n📅 EJEMPLO 2: Múltiples años")
     anios_a_buscar = [2023, 2022, 2021]
