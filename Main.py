@@ -1,12 +1,13 @@
 # main.py
-from extraer_urls import extraer_todas_las_paginas
-from extraer_fichas import extraer_fichas_desde_lista
-from guardar_historico import actualizar_historico
+from paginas.PatioTuerca.extraer_urls import extraer_multiples_anios
+from paginas.PatioTuerca.extraer_fichas import extraer_fichas_desde_lista
+from paginas.PatioTuerca.guardar_historico import actualizar_historico
 if __name__ == "__main__":
     print("\n🚗 Iniciando scraping completo...\n")
 
     # Paso 1: obtener todas las URLs
-    urls = extraer_todas_las_paginas(num_paginas=1, pausa=2)
+    anios_a_buscar = [2015,2016,2017,2018,2019,2020]
+    urls = extraer_multiples_anios(anios_a_buscar,num_paginas=5, pausa=2)
 
     print(f"\n🔹 Proceso inicial completado. Total de URLs encontradas: {len(urls)}\n")
 
