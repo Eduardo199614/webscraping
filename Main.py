@@ -1,7 +1,8 @@
 # main.py
-from extraer_urls import extraer_todas_las_paginas
-from extraer_fichas import extraer_fichas_desde_lista
-from guardar_historico import actualizar_historico
+from paginas.PatioTuerca.extraer_urls import extraer_todas_las_paginas
+from paginas.PatioTuerca.extraer_fichas import extraer_fichas_desde_lista
+from paginas.PatioTuerca.guardar_historico import actualizar_historico
+from paginas.PatioTuerca.realizar_limpieza import limpiar_resultados
 if __name__ == "__main__":
     print("\n🚗 Iniciando scraping completo...\n")
 
@@ -15,7 +16,12 @@ if __name__ == "__main__":
     
     print(f"\n🏁 Proceso 2 completado. {len(resultados)} fichas guardadas exitosamente.")
 
-    # Paso 3: actualizar histórico (vigencia, duplicados, cambios)
-    df = actualizar_historico(resultados)
+    #Paso 3: Limpiar los datos a un formato homologado y guardarlo en JSON.
+    limpieza = limpiar_resultados(resultados)
+    
+    print(f"\n🏁 Proceso 3 completado. {len(limpieza)} fichas limpias.")
+    
+    # Paso 4: actualizar histórico (vigencia, duplicados, cambios)
+    df = actualizar_historico(limpieza)
     
     print(f"\n🏁 Proceso final completado. Total registros actuales: {len(df)}")
