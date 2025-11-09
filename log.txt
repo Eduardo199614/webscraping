@@ -1,0 +1,4 @@
+===================================================== 
+[lun 20/10/2025 22:49:03,06] - Iniciando ejecución 
+Ejecutando: C:\Users\Lenovo LOQ\AppData\Local\Microsoft\WindowsApps\python.exe "C:\Users\Lenovo LOQ\Documents\GitHub\webscraping\AutocorWebScraping.py" 
+C:\Users\Lenovo LOQ\AppData\Local\Microsoft\WindowsApps\python.exe: can't open file 'C:\\Users\\Lenovo LOQ\\Documents\\GitHub\\webscraping\\AutocorWebScraping.py': [Errno 2] No such file or directory
