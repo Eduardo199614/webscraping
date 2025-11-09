@@ -3,6 +3,7 @@ from paginas.PatioTuerca.extraer_urls import extraer_todas_las_paginas
 from paginas.PatioTuerca.extraer_fichas import extraer_fichas_desde_lista
 from paginas.PatioTuerca.guardar_historico import actualizar_historico
 from paginas.PatioTuerca.realizar_limpieza import limpiar_resultados
+
 if __name__ == "__main__":
     print("\n🚗 Iniciando scraping completo...\n")
 
