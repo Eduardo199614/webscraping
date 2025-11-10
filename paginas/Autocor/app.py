@@ -3,9 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, Dict, Any, Iterable, Tuple, List
 from .dominio.servicios import MergeService
+from .dominio.servicios import FichaMergeService
 from .infraestructura.api_cliente import ApiClient
 from .infraestructura.repositorio import Repository
 from .infraestructura.traductor import RecordTranslator
+from .infraestructura.traductor import PatioTuercaRecordTranslator
 
 @dataclass
 class AppConfig:

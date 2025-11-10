@@ -109,3 +109,66 @@ class AutocorRecordTranslator(RecordTranslator):
         if re.search(r'\bTM\b', v):
             return "Manual"
         return None
+
+# Patio Tuerca ------------------------------
+
+class PatioTuercaRecordTranslator(RecordTranslator):
+    _mapping = {
+        "Año": "anio",
+        "Precio": "precio",
+        "Marca": "marca",
+        "Modelo": "modelo",
+        "Kilometraje": "kilometraje",
+        "Motor(cilindraje)": "cilindraje",
+        "Transmisión": "transmision",
+        "Ciudad": "ciudad",
+        "TipoPago": "tipo_pago"
+    }
+
+    def translate(self, rec: Dict[str, Any]) -> Dict[str, Any]:
+        out = {self._mapping.get(k, k): v for k, v in rec.items()}
+
+        # Convertir tipos básicos
+        if "kilometraje" in out:
+            try:
+                out["kilometraje"] = int(str(out["kilometraje"]).replace(".", "").replace(",", ""))
+            except Exception:
+                pass
+
+        if "precio" in out:
+            try:
+                out["precio"] = float(str(out["precio"]).replace("$", "").replace(",", "").strip())
+            except Exception:
+                pass
+
+        if "anio" in out:
+            try:
+                out["anio"] = int(out["anio"])
+            except Exception:
+                pass
+
+        # Estandarizar transmisión
+        if "transmision" in out:
+            v = str(out["transmision"]).lower()
+            if "auto" in v:
+                out["transmision"] = "Automática"
+            elif "manu" in v:
+                out["transmision"] = "Manual"
+
+        return out
+
+    def build_csv_row(self, rec: Dict[str, Any]) -> Dict[str, Any]:
+        rec_es = self.translate(rec)
+        return {
+            "id": rec.get("ID"),
+            "marca": rec_es.get("marca"),
+            "modelo": rec_es.get("modelo"),
+            "anio": rec_es.get("anio"),
+            "precio": rec_es.get("precio"),
+            "kilometraje": rec_es.get("kilometraje"),
+            "cilindraje": rec_es.get("cilindraje"),
+            "transmision": rec_es.get("transmision"),
+            "fecha_ingreso": rec.get("FechaIngreso"),
+            "vigencia": rec.get("Vigencia"),
+            "json": json.dumps(rec_es, ensure_ascii=False)
+        }
