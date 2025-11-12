@@ -1,13 +1,6 @@
 # autocor_solid/app.py
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Protocol, Dict, Any, Iterable, Tuple, List
-from .dominio.servicios import MergeService
-from .dominio.servicios import FichaMergeService
-from .infraestructura.api_cliente import ApiClient
-from .infraestructura.repositorio import Repository
-from .infraestructura.traductor import RecordTranslator
-from .infraestructura.traductor import PatioTuercaRecordTranslator
 
 @dataclass
 class AppConfig:
@@ -19,29 +12,30 @@ class AppConfig:
     user_agent: str
 
 class App:
-    """Orquesta: API → traducir → merge → guardar"""
-    def __init__(self, api: ApiClient, translator: RecordTranslator, repo: Repository, merger: MergeService):
+    def __init__(self, api, translator, repo, merger):
         self.api = api
         self.translator = translator
         self.repo = repo
         self.merger = merger
 
     def run(self) -> None:
-        # 1) Descubrir páginas y obtener page 1
-        page_count, entities = self.api.discover_first_page()
+        # 1) Obtener entidades (JSON o scrapping, según el cliente)
+        if hasattr(self.api, "fetch_all"):
+            entities = self.api.fetch_all()
+        else:
+            # compatibilidad si se usa ApiClient de Autocor con discover_first_page()
+            page_count, entities = self.api.discover_first_page()
+            for p in range(2, page_count + 1):
+                entities.extend(self.api.fetch_page(p))
 
-        # 2) Resto de páginas
-        for p in range(2, page_count + 1):
-            entities.extend(self.api.fetch_page(p))
-
-        # 3) Traducir a filas CSV mínimas
+        # 2) Traducir a filas CSV
         incoming_rows = [self.translator.build_csv_row(e) for e in entities]
 
-        # 4) Cargar existente y fusionar
+        # 3) Fusionar con CSV existente
         existing = self.repo.load()
         merged, metrics = self.merger.merge(existing, incoming_rows)
 
-        # 5) Guardar
+        # 4) Guardar
         self.repo.save(merged)
 
         print(

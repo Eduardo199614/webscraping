@@ -1,0 +1,11 @@
+# --- Core ---
+requests
+bs4
+# --- Datos y CSV ---
+pandas
+
+# --- Compatibilidad de tiempo y zona horaria ---
+python-dateutil
+
+
+#Instalar con pip install -r requirements.txt 

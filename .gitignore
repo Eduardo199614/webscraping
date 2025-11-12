@@ -1,0 +1,8 @@
+# --- Entornos virtuales ---
+venv/
+.env/
+.env.bak/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

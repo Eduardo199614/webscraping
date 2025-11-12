@@ -1,11 +1,11 @@
 # autocor_solid/domain/models.py
 from __future__ import annotations
-import datetime
 from typing import Optional
+import datetime
 #-Patiotuerca
 from dataclasses import dataclass
 from typing import Dict, Any
-from datetime import datetime
+
 
 #--------------Autocor
 def parse_iso_dt(s: Optional[str]) -> Optional[datetime.datetime]:
@@ -21,20 +21,39 @@ def parse_iso_dt(s: Optional[str]) -> Optional[datetime.datetime]:
     except Exception:
         return None
 
-def now_utc() -> datetime.datetime:
+def now_utc():
     return datetime.datetime.now(datetime.timezone.utc)
 
-CSV_COLS = ["id_record", "marca", "model", "transmision", "cilindraje", "kilometraje", "fecha_ingreso", "json"]
+
 
 
 #--------------- PatioTuerca
-
 @dataclass
-class FichaAuto:
-    id_auto: str | None
-    fecha_ingreso: datetime
-    estado: str
-    datos: Dict[str, Any]    # ← contiene TODO: summary + ficha técnica
-    mensaje: str
-    tiempo: float
-    ejecucion_exitosa: bool
+class Vehiculo: #formato de como parsear_html de la clase en api_cliente_PatioTuerca devuelve la informacion (usado posterior a la llamada de parsear_html)
+    id: str
+    summary: Dict[str, Any]
+    ficha_tecnica: Dict[str, Any]
+    url: str
+# Años que vas a procesar en lotes
+ANIOS_OBJETIVO =   [2015] # ejemplo: 2015–2025 list(range(2015, 2026))
+#el [2015] para pruebas
+CSV_COLS = [ #Modificado al formato de datos completo pedido por el cliente (Como tenían en la base de PatioTuerca de ellos)
+    "id_record",
+    "marca",
+    "modelo",
+    "anio",
+    "precio",
+    "kilometraje",
+    "ciudad",
+    "transmision",
+    "cilindraje",
+    "combustible",
+    "traccion",
+    "direccion",
+    "tapizado",
+    "tipo_pago",
+    "descripcion",
+    "fecha_ingreso",
+    "url",
+    "json"
+]
