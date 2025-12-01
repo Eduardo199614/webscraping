@@ -203,7 +203,6 @@ class PatioTuercaRecordTranslator:
         print("Este es el out que sale: ",out)
         return out
     
-    def build_csv_row(self, data: list[dict]) -> list[dict]:
-        rows = self.translate(data)
-        return rows
-
+    def build_csv_row(self, rec: Dict[str, Any]) -> Dict[str, Any]:
+        # aquí simplemente devuelves lo traducido
+        return self.translate(rec)
