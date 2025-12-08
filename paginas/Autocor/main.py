@@ -26,7 +26,7 @@ def parse_args() -> tuple[AppConfig, str]:
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", choices=["autocor", "patiotuerca"], default="autocor",
                     help="Fuente de datos a procesar")
-    ap.add_argument("--base-url", default=None)
+    ap.add_argument("--base-url", default=DEFAULT_BASE_URL)
     ap.add_argument("--timeout", type=int, default=20)
     ap.add_argument("--retries", type=int, default=3)
     ap.add_argument("--fresh-days", type=int, default=1,
@@ -35,13 +35,8 @@ def parse_args() -> tuple[AppConfig, str]:
 
     args = ap.parse_args()
 
-    BASE_URLS = {
-        "autocor": "https://api.autocor.com/api/cars",
-        "patiotuerca": "https://ecuador.patiotuerca.com/usados/-/autos",
-    }
-
     cfg = AppConfig(
-        base_url=args.base_url or BASE_URLS[args.source],
+        base_url=args.base_url,
         out_csv=f"datos/{args.source}_fichas.csv",
         timeout=args.timeout,
         retries=args.retries,

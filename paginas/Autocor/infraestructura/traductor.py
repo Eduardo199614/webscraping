@@ -2,7 +2,7 @@
 from __future__ import annotations
 import re, json
 from typing import Protocol, Dict, Any, Optional
-import time
+from datetime import datetime
 
 class RecordTranslator(Protocol):
     def translate(self, rec: Dict[str, Any]) -> Dict[str, Any]: ...
@@ -126,25 +126,28 @@ class PatioTuercaRecordTranslator:
         merged = {**rec, **summary, **ficha}
         # --- Mapeo estándar ---
         out = {
+            "placa": merged.get("Placa"),
+            "anio": merged.get("Año") or merged.get("Year"),
+            "precio": merged.get("Precio") or merged.get("CashPrice") or merged.get("Precio Contado"),
+            "url": merged.get("url"),
             "id_record": merged.get("id"),
             "marca": merged.get("Marca") or merged.get("Brand"),
             "modelo": merged.get("Modelo") or merged.get("Model"),
-            "anio": merged.get("Año") or merged.get("Year"),
-            "precio": merged.get("Precio") or merged.get("CashPrice") or merged.get("Precio Contado"),
             "kilometraje": merged.get("Recorrido") or merged.get("Kilometraje") or merged.get("Mileage"),
-            "ciudad": merged.get("Ciudad") or merged.get("City"),
-            "transmision": merged.get("Transmisión") or merged.get("Transmission"),
-            "cilindraje": merged.get("Motor(cilindraje)") or merged.get("Engine"),
-            "combustible": merged.get("Combustible") or merged.get("FuelType"),
+            "climateSystem": merged.get("Sistema de climatización"),
             "traccion": merged.get("Tracción") or merged.get("Traction"),
+            "color": merged.get("Color"),
+            "motor": merged.get("Motor(cilindraje)") or merged.get("Engine"),
+            "transmision": merged.get("Transmisión") or merged.get("Transmission"),
             "direccion": merged.get("Dirección") or merged.get("Steering"),
-            "tapizado": merged.get("Tapizado") or merged.get("InteriorType"),
-            "tipo_pago": merged.get("Tipo de pago") or merged.get("PaymentType"),
+            "interiorType": merged.get("Tapizado") or merged.get("InteriorType"),
+            "fuelType": merged.get("Combustible") or merged.get("FuelType"),
+            "motorType": merged.get("Tipo de Motor"),
             "descripcion": merged.get("Subtipo") or merged.get("Description"),
-            "url": merged.get("url"),
-            "fecha_ingreso": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "ciudad": merged.get("Ciudad") or merged.get("City"),
+            "typePago": merged.get("Tipo de pago") or merged.get("PaymentType"),
         }
-        print("Esto es out: ",out)
+
         # --- Normalización de campos numéricos y texto ---
         # Año
         try:
@@ -200,7 +203,10 @@ class PatioTuercaRecordTranslator:
 
         # Guardar el JSON completo
         out["json"] = json.dumps(rec, ensure_ascii=False)
-        print("Este es el out que sale: ",out)
+
+        #Por último, guardar la fecha en la que se hizo todo esto
+        out["FechaDescarga"] = datetime.now() #Formato de fecha en python más parecido a sysdate()
+
         return out
     
     def build_csv_row(self, data: list[dict]) -> list[dict]:

@@ -6,7 +6,8 @@ import requests
 import re
 import time, base64, json
 
-URL_BASE = "https://ecuador.patiotuerca.com/usados/-/autos"
+URL_BASE = ["https://ecuador.patiotuerca.com/usados/-/autos",
+            "https://ecuador.patiotuerca.com/usados/-/pesados"]
 
 #-------------------------Web-----------------------------------
 class WebClient(Protocol):
@@ -31,7 +32,7 @@ def generar_codigo_base64(n: int) -> str:
 
 class PatioTuercaRepositorio():
     """Repositorio que obtiene vehículos por año desde PatioTuerca."""
-    def __init__(self, web_client: RequestsWebClient, pausa: int = 2, num_paginas: int = 1): #modificar la cantidad de páginas o el tiempo de pausa aquí de ser necesario.
+    def __init__(self, web_client: RequestsWebClient, pausa: int = 2, num_paginas: int = 300): #modificar la cantidad de páginas o el tiempo de pausa aquí de ser necesario.
         self.web = web_client
         self.num_paginas = num_paginas
         self.pausa = pausa
@@ -60,30 +61,32 @@ class PatioTuercaRepositorio():
 
     def obtener_vehiculos_por_anio(self, anio: int) -> List[Vehiculo]:
         """Recorre las páginas de resultados para un año específico y extrae las fichas completas."""
-        print(f"🚗 Buscando vehículos del año {anio}...")
-        base_url = f"{URL_BASE}/-/-/-/{anio}"
-        todas_urls = []
+        todas_urls = [] #almacenar todas las urls
+        for i in URL_BASE:
+            print(f"🚗 Buscando vehículos del año {anio} de la url base: {i}")
+            base_url = f"{i}/-/-/-/{anio}"
 
-        for pagina in range(1, self.num_paginas + 1):
-            # Construye la URL de la página actual
-            if pagina == 1:
-                url_pagina = base_url
-            else:
-                codigo = generar_codigo_base64(pagina - 1)
-                url_pagina = f"{base_url}?page={codigo}"
+            for pagina in range(1, self.num_paginas + 1):
+                # Construye la URL de la página actual
+                if pagina == 1:
+                    url_pagina = base_url
+                else:
+                    codigo = generar_codigo_base64(pagina - 1)
+                    url_pagina = f"{base_url}?page={codigo}"
 
-            print(f"🔎 Página {pagina}: {url_pagina}")
-            try:
-                urls = self._extraer_urls_vehiculos(url_pagina)
-                if not urls:
-                    print(f"⚠️ No hay más resultados para {anio}")
+                print(f"🔎 Página {pagina}: {url_pagina}")
+                try:
+                    urls = self._extraer_urls_vehiculos(url_pagina)
+                    if not urls:
+                        print(f"⚠️ No hay más resultados para {anio}")
+                        break
+                    todas_urls.extend(urls)
+                    print(f"✅ {len(urls)} URLs encontradas en página {pagina}")
+                    time.sleep(self.pausa)
+                except Exception as e:
+                    print(f"❌ Error en página {pagina}: {e}")
                     break
-                todas_urls.extend(urls)
-                print(f"✅ {len(urls)} URLs encontradas en página {pagina}")
-                time.sleep(self.pausa)
-            except Exception as e:
-                print(f"❌ Error en página {pagina}: {e}")
-                break
+        print("Total de vehículos encontrados: ",len(todas_urls))
 
         # Extrae las fichas completas de cada URL
         vehiculos = []
