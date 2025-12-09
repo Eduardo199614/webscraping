@@ -73,16 +73,32 @@ class AutocorRecordTranslator(RecordTranslator):
 
     def build_csv_row(self, rec: Dict[str, Any]) -> Dict[str, Any]:
         rec_es = self.translate(rec)
+
         return {
-            "id_record": rec.get("id_record"),
-            "maraca": rec.get("brand"),              # (intencional: "maraca" tal como lo pediste)
-            "model": rec.get("model"),
-            "transmision": rec_es.get("transmision", ""),
-            "cilindraje": rec_es.get("cilindraje", ""),
-            "kilometraje": rec.get("odometer"),
-            "fecha_ingreso": rec.get("created_dt"),
-            "json": json.dumps(rec_es, ensure_ascii=False),
+        "placa": rec_es.get("placa", rec.get("license_plate", "")),
+        "anio": rec_es.get("anio", rec.get("year", "")),
+        "precio": rec_es.get("precio", rec.get("prices", "")),
+        "url": rec.get("url", ""),
+        "id_record": rec.get("id_record", ""),
+        "marca": rec_es.get("marca", rec.get("brand", "")),
+        "modelo": rec_es.get("modelo", rec.get("model", "")),
+        "kilometraje": rec_es.get("kilometraje", rec.get("odometer", "")),
+        "climateSystem": rec.get("climateSystem", ""),
+        "traccion": rec.get("traccion", ""),
+        "color": rec_es.get("color", rec.get("color", "")),
+        "motor": rec.get("motor", ""),
+        "transmision": rec_es.get("transmision", ""),
+        "direccion": rec.get("direccion", ""),
+        "interiorType": rec.get("interiorType", ""),
+        "fuelType": rec.get("fuelType", rec_es.get("combustible", "")),
+        "motorType": rec.get("motorType", ""),
+        "matricula": rec.get("matricula", ""),
+        "ciudad": rec.get("ciudad", rec_es.get("ubicacion", "")),
+        "typePago": rec.get("typePago", ""),
+        "json": json.dumps(rec_es, ensure_ascii=False),
+        "FechaDescarga": datetime.now(),
         }
+
 
     @staticmethod
     def _extract_cilindraje(version: str) -> Optional[str]:
