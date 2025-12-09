@@ -2,7 +2,7 @@
 from __future__ import annotations
 import os, csv
 from typing import Protocol, Dict, Any
-from ..dominio.modelo import CSV_COLS
+from paginas.Autoscraper.dominio.modelo import CSV_COLS
 
 class Repository(Protocol):
     def load(self) -> Dict[str, Dict[str, str]]: ...
