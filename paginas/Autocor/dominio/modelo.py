@@ -35,8 +35,13 @@ class Vehiculo: #formato de como parsear_html de la clase en api_cliente_PatioTu
     ficha_tecnica: Dict[str, Any]
     url: str
 # Años que vas a procesar en lotes
+
 #ANIOS_OBJETIVO =   [2015] # Para pruebas
 ANIOS_OBJETIVO = list(range(2015, 2026))
+
+ANIOS_OBJETIVO =   [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025] # ejemplo: 2015–2025 list(range(2015, 2026))
+#el [2015] para pruebas
+
 CSV_COLS = [ #Modificado al formato de datos completo pedido por el cliente (Como tenían en la base de PatioTuerca de ellos)
     "placa",
     "anio",

@@ -32,7 +32,9 @@ def generar_codigo_base64(n: int) -> str:
 
 class PatioTuercaRepositorio():
     """Repositorio que obtiene vehículos por año desde PatioTuerca."""
+
     def __init__(self, web_client: RequestsWebClient, pausa: int = 2, num_paginas: int = 300): #modificar la cantidad de páginas o el tiempo de pausa aquí de ser necesario.
+
         self.web = web_client
         self.num_paginas = num_paginas
         self.pausa = pausa
@@ -169,6 +171,20 @@ class PatioTuercaClientAdapter:
     def __init__(self, web_client: RequestsWebClient, anios: list[int]):
         self.repo = PatioTuercaRepositorio(web_client)
         self.anios = anios
+
+    def fetch_year(self, anio: int) -> List[Dict[str, Any]]:
+        """Devuelve las fichas de vehículos de un solo año."""
+        vehiculos = self.repo.obtener_vehiculos_por_anio(anio)
+
+        entities: List[Dict[str, Any]] = []
+        for v in vehiculos:
+            entities.append({
+                "id_record": v.id,
+                "summary": v.summary,
+                "ficha_tecnica": v.ficha_tecnica,
+                "url": v.url
+            })
+        return entities
 
     def fetch_all(self) -> List[Dict[str, Any]]:
         """Devuelve la lista de fichas de vehículos de todos los años indicados."""
