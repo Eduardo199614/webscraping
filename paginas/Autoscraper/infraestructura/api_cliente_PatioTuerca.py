@@ -6,41 +6,44 @@ import requests
 import re
 import time, base64, json
 
-URL_BASE = "https://ecuador.patiotuerca.com/usados/-/autos"
-
+URL_BASE = ["https://ecuador.patiotuerca.com/usados/-/autos",
+            "https://ecuador.patiotuerca.com/usados/-/pesados"]
+ 
 #-------------------------Web-----------------------------------
 class WebClient(Protocol):
     def fetch_html(self, url: str) -> str: ...
-
+ 
 class RequestsWebClient(WebClient):
     def __init__(self, user_agent: str, timeout: int = 15):
         self.timeout = timeout
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": user_agent})
-
+ 
     def fetch_html(self, url: str) -> str:
         resp = self.session.get(url, timeout=self.timeout)
         resp.raise_for_status()
         return resp.text
-
+ 
 #---------------------------Extracción de las urls para sacar data---------------------------
 def generar_codigo_base64(n: int) -> str:
     """Codifica un número de página en base64, como usa PatioTuerca."""
     return base64.b64encode(str(n).encode()).decode()
-
-
+ 
+ 
 class PatioTuercaRepositorio():
     """Repositorio que obtiene vehículos por año desde PatioTuerca."""
-    def __init__(self, web_client: RequestsWebClient, pausa: int = 5, num_paginas: int = 10): #modificar la cantidad de páginas o el tiempo de pausa aquí de ser necesario.
+ 
+    def __init__(self, web_client: RequestsWebClient, pausa: int = 2, num_paginas: int = 300): #modificar la cantidad de páginas o el tiempo de pausa aquí de ser necesario.
+ 
         self.web = web_client
         self.num_paginas = num_paginas
         self.pausa = pausa
-
+ 
     def _extraer_urls_vehiculos(self, url_pagina: str) -> List[str]:
         """Extrae URLs de fichas de vehículos a partir del JSON-LD embebido en la página."""
         html = self.web.fetch_html(url_pagina)
         soup = BeautifulSoup(html, "html.parser")
-
+ 
         urls = []
         for script in soup.find_all("script", {"type": "application/ld+json"}):
             try:
@@ -55,36 +58,38 @@ class PatioTuercaRepositorio():
                         urls.append(data["url"])
             except Exception:
                 continue
-
+ 
         return urls
-
+ 
     def obtener_vehiculos_por_anio(self, anio: int) -> List[Vehiculo]:
         """Recorre las páginas de resultados para un año específico y extrae las fichas completas."""
-        print(f"🚗 Buscando vehículos del año {anio}...")
-        base_url = f"{URL_BASE}/-/-/-/{anio}"
-        todas_urls = []
-
-        for pagina in range(1, self.num_paginas + 1):
-            # Construye la URL de la página actual
-            if pagina == 1:
-                url_pagina = base_url
-            else:
-                codigo = generar_codigo_base64(pagina - 1)
-                url_pagina = f"{base_url}?page={codigo}"
-
-            print(f"🔎 Página {pagina}: {url_pagina}")
-            try:
-                urls = self._extraer_urls_vehiculos(url_pagina)
-                if not urls:
-                    print(f"⚠️ No hay más resultados para {anio}")
+        todas_urls = [] #almacenar todas las urls
+        for i in URL_BASE:
+            print(f"🚗 Buscando vehículos del año {anio} de la url base: {i}")
+            base_url = f"{i}/-/-/-/{anio}"
+ 
+            for pagina in range(1, self.num_paginas + 1):
+                # Construye la URL de la página actual
+                if pagina == 1:
+                    url_pagina = base_url
+                else:
+                    codigo = generar_codigo_base64(pagina - 1)
+                    url_pagina = f"{base_url}?page={codigo}"
+ 
+                print(f"🔎 Página {pagina}: {url_pagina}")
+                try:
+                    urls = self._extraer_urls_vehiculos(url_pagina)
+                    if not urls:
+                        print(f"⚠️ No hay más resultados para {anio}")
+                        break
+                    todas_urls.extend(urls)
+                    print(f"✅ {len(urls)} URLs encontradas en página {pagina}")
+                    time.sleep(self.pausa)
+                except Exception as e:
+                    print(f"❌ Error en página {pagina}: {e}")
                     break
-                todas_urls.extend(urls)
-                print(f"✅ {len(urls)} URLs encontradas en página {pagina}")
-                time.sleep(self.pausa)
-            except Exception as e:
-                print(f"❌ Error en página {pagina}: {e}")
-                break
-
+        print("Total de vehículos encontrados: ",len(todas_urls))
+ 
         # Extrae las fichas completas de cada URL
         vehiculos = []
         for i, url in enumerate(todas_urls, start=1):
@@ -103,7 +108,7 @@ class PatioTuercaRepositorio():
                 time.sleep(0.8)
             except Exception as e:
                 print(f"   ⚠️ Error al procesar {url}: {e}")
-
+ 
         print(f"📊 Total extraídos para {anio}: {len(vehiculos)} vehículos")
         return vehiculos
 
