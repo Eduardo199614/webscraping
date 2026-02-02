@@ -1,9 +1,11 @@
 # autocor_solid/domain/services.py
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Dict, Any, Iterable, Tuple
+from typing import Dict, Any, Iterable, Tuple, List
 from .politicas import FreshnessPolicy
 from .modelo import now_utc
+
+# patioTuerca_solid/domain/services.py
 
 @dataclass
 class MergeService:
