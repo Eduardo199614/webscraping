@@ -194,7 +194,7 @@ class PatioTuercaClientAdapter:
             # Convertimos los Vehiculo (dataclasses o dicts) a diccionarios simples
             for v in vehiculos:
                 all_entities.append({
-                    "id": v.id,
+                    "id_record": v.id,
                     "summary": v.summary,
                     "ficha_tecnica": v.ficha_tecnica,
                     "url":v.url
