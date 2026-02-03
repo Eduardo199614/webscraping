@@ -32,9 +32,9 @@ def generar_codigo_base64(n: int) -> str:
  
 class PatioTuercaRepositorio():
     """Repositorio que obtiene vehículos por año desde PatioTuerca."""
- 
+
     def __init__(self, web_client: RequestsWebClient, pausa: int = 2, num_paginas: int = 300): #modificar la cantidad de páginas o el tiempo de pausa aquí de ser necesario.
- 
+
         self.web = web_client
         self.num_paginas = num_paginas
         self.pausa = pausa
