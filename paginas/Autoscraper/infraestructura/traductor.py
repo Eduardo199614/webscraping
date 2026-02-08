@@ -1,208 +1,181 @@
-# autocor_solid/infra/translators.py
+# paginas/Autoscraper/infraestructura/traductor.py
+# -*- coding: utf-8 -*-
 from __future__ import annotations
-import re, json
-from typing import Protocol, Dict, Any, Optional
-import time
+from typing import Any, Dict
+from datetime import datetime
 
-class RecordTranslator(Protocol):
-    def translate(self, rec: Dict[str, Any]) -> Dict[str, Any]: ...
-    def build_csv_row(self, rec: Dict[str, Any]) -> Dict[str, Any]: ...
+def _now_iso() -> str:
+    return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
-class AutocorRecordTranslator(RecordTranslator):
-    _mapping = {
-        "id_record": "id_registro",
-        "id": "id",
-        "media": "media",
-        "brand": "marca",
-        "model": "modelo",
-        "prices": "precio",
-        "year": "anio",
-        "owner": "duenio",
-        "home": "domicilio",
-        "odometer": "kilometraje",
-        "type": "tipo",
-        "location": "ubicacion",
-        "business_channel": "canal_negocio",
-        "processedAt": "procesado_el",
-        "color": "color",
-        "accesories": "accesorios",
-        "license_plate": "placa",
-        "received_flag": "bandera_recibido",
-        "days_in_stock": "dias_en_stock",
-        "published_in_web": "publicado_en_web",
-        "engine_number": "numero_motor",
-        "reserved_by_user_email": "reservado_por_email",
-        "reserved_by_user_name": "reservado_por_nombre",
-        "reserved_dt": "reservado_el",
-        "expiration_dt": "expira_el",
-        "opportunity_sale_id": "id_oportunidad_venta",
-        "factory_invoicing_dt": "facturado_fabrica_el",
-        "factory_status": "estado_fabrica",
-        "status_name": "estado",
-        "fuel_name": "combustible",
-        "availability_status_name": "disponibilidad",
-        "availability_status_code": "codigo_disponibilidad",
-        "created_fullname": "creado_por",
-        "created_dt": "fecha_ingreso",
-        "deleted_flag": "bandera_eliminado",
-        "owner_branch_code": "sucursal_duenio",
-        "saving_plan_group": "grupo",
-        "saving_plan_order": "transmision_bruta",
-        "integration_reference_code": "codigo_referencia_integracion",
-        "version": "version",
-        "purchase_price": "precio_compra",
-    }
+def _pick(d: Dict[str, Any], *keys: str, default: Any = "") -> Any:
+    for k in keys:
+        if k in d and d.get(k) not in (None, "", [], {}):
+            return d.get(k)
+    return default
 
-    def translate(self, rec: Dict[str, Any]) -> Dict[str, Any]:
-        out = { self._mapping.get(k, k): v for k, v in rec.items() }
+def _to_int(x: Any, default: int = 0) -> int:
+    try:
+        if x is None or x == "":
+            return default
+        return int(float(str(x).replace(",", "").strip()))
+    except Exception:
+        return default
 
-        # Derivados
-        out["transmision"] = self._infer_transmision(rec.get("version", ""), rec.get("saving_plan_order", "") or "")
-        cil = self._extract_cilindraje(rec.get("version", ""))
-        if cil:
-            out["cilindraje"] = cil
+def _to_float(x: Any, default: float = 0.0) -> float:
+    try:
+        if x is None or x == "":
+            return default
+        return float(str(x).replace(",", "").strip())
+    except Exception:
+        return default
 
-        # Normalización
-        if "kilometraje" in out:
-            try:
-                out["kilometraje"] = int(float(out["kilometraje"]))
-            except Exception:
-                pass
+def _norm_str(x: Any, default: str = "") -> str:
+    if x is None:
+        return default
+    s = str(x).strip()
+    return s if s else default
 
-        return out
 
-    def build_csv_row(self, rec: Dict[str, Any]) -> Dict[str, Any]:
-        rec_es = self.translate(rec)
-        return {
-            "id_record": rec.get("id_record"),
-            "maraca": rec.get("brand"),              # (intencional: "maraca" tal como lo pediste)
-            "model": rec.get("model"),
-            "transmision": rec_es.get("transmision", ""),
-            "cilindraje": rec_es.get("cilindraje", ""),
-            "kilometraje": rec.get("odometer"),
-            "fecha_ingreso": rec.get("created_dt"),
-            "json": json.dumps(rec_es, ensure_ascii=False),
+# =====================================================
+# AUTOCOR
+# =====================================================
+
+class AutocorRecordTranslator:
+    """
+    Traduce la entidad cruda de Autocor a una fila normalizada.
+    """
+    def build_csv_row(self, e: Dict[str, Any]) -> Dict[str, Any]:
+        id_record = _norm_str(_pick(e, "id_record", "id", "uuid", "vehicleId", "pilotId", default=""))
+
+        placa = _norm_str(_pick(e, "placa", "plate", "licensePlate", default=""))
+        url = _norm_str(_pick(e, "url", "link", "href", "detailUrl", default=""))
+        anio = _to_int(_pick(e, "anio", "year", "modelYear", default=0))
+
+        if not id_record:
+            id_record = f"AUTOCOR:{placa}:{anio}:{url}"
+
+        row = {
+            "id_record": id_record,
+            "source": "autocor",
+            "fecha_scrape": _now_iso(),
+
+            "placa": placa,
+            "anio": anio,
+            "precio": _to_float(_pick(e, "precio", "price", "amount", default=0)),
+            "kilometraje": _to_int(_pick(e, "kilometraje", "kilometros", "km", "mileage", default=0)),
+            "marca": _norm_str(_pick(e, "marca", "brand", "make", default="ND"), default="ND"),
+            "modelo": _norm_str(_pick(e, "modelo", "model", default="ND"), default="ND"),
+            "ciudad": _norm_str(_pick(e, "ciudad", "city", default="ND"), default="ND"),
+
+            "color": _norm_str(_pick(e, "color", default="ND"), default="ND"),
+            "motor": _norm_str(_pick(e, "motor", "engine", default="ND"), default="ND"),
+            "transmision": _norm_str(_pick(e, "transmision", "transmission", default="ND"), default="ND"),
+            "traccion": _norm_str(_pick(e, "traccion", "drive", default="ND"), default="ND"),
+            "direccion": _norm_str(_pick(e, "direccion", default="ND"), default="ND"),
+
+            "url": url,
+            "productId": _norm_str(_pick(e, "productId", "product_id", default="1"), default="1"),
         }
 
-    @staticmethod
-    def _extract_cilindraje(version: str) -> Optional[str]:
-        if not version:
-            return None
-        m = re.search(r'(\d{1,2}[\.,]\d)', version)
-        if m:
-            return m.group(1).replace(",", ".")
-        m2 = re.search(r'\b(\d{1,2})\b(?=.*\s(L|litros|AC|TA|TM)\b|$)', version, flags=re.IGNORECASE)
-        if m2:
-            return m2.group(1)
-        return None
+        # Defaults para columnas del modelo (si no vienen del portal)
+        row.setdefault("cilindraje", "ND")
+        row.setdefault("combustible", "ND")
+        row.setdefault("tapizado", "ND")
+        row.setdefault("tipo_pago", "CONTADO")
+        row.setdefault("descripcion", "ND")
+        row.setdefault("fecha_ingreso", _now_iso())
+        row.setdefault("json", "{}")
 
-    @staticmethod
-    def _infer_transmision(version: str, saving_plan_order: str) -> Optional[str]:
-        if saving_plan_order:
-            spo = saving_plan_order.strip().upper()
-            if "AUTOM" in spo:
-                return "Automática"
-            if "MANU" in spo:
-                return "Manual"
-        v = (version or "").upper()
-        if re.search(r'\bTA\b', v):
-            return "Automática"
-        if re.search(r'\bTM\b', v):
-            return "Manual"
-        return None
+        return row
 
-# Patio Tuerca ------------------------------
+
+# =====================================================
+# PATIOTUERCA
+# =====================================================
 
 class PatioTuercaRecordTranslator:
-    """Traduce los registros obtenidos del scraping de PatioTuerca a un formato estándar"""
+    """
+    Traduce la entidad cruda de PatioTuerca a una fila normalizada.
+    """
+    def build_csv_row(self, e: Dict[str, Any]) -> Dict[str, Any]:
+        id_record = _norm_str(_pick(e, "id_record", "id", "uuid", "publicationId", "adId", default=""))
 
-    def translate(self, rec: Dict[str, Any]) -> Dict[str, Any]:
-        """Convierte un registro crudo de PatioTuerca (que puede venir anidado) a un formato estándar."""
+        placa = _norm_str(_pick(e, "placa", "plate", "licensePlate", default=""))
+        url = _norm_str(_pick(e, "url", "link", "href", "detailUrl", default=""))
+        anio = _to_int(_pick(e, "anio", "year", "modelYear", default=0))
 
-        # --- Desempaquetar niveles comunes ---
-        ficha = rec.get("ficha_tecnica", {}) or rec.get("ficha", {})
-        summary = rec.get("summary", {}) or rec.get("resumen", {})
-        # --- Unificar todos los niveles posibles ---
-        merged = {**rec, **summary, **ficha}
-        # --- Mapeo estándar ---
-        out = {
-            "id_record": merged.get("id"),
-            "marca": merged.get("Marca") or merged.get("Brand"),
-            "modelo": merged.get("Modelo") or merged.get("Model"),
-            "anio": merged.get("Año") or merged.get("Year"),
-            "precio": merged.get("Precio") or merged.get("CashPrice") or merged.get("Precio Contado"),
-            "kilometraje": merged.get("Recorrido") or merged.get("Kilometraje") or merged.get("Mileage"),
-            "ciudad": merged.get("Ciudad") or merged.get("City"),
-            "transmision": merged.get("Transmisión") or merged.get("Transmission"),
-            "cilindraje": merged.get("Motor(cilindraje)") or merged.get("Engine"),
-            "combustible": merged.get("Combustible") or merged.get("FuelType"),
-            "traccion": merged.get("Tracción") or merged.get("Traction"),
-            "direccion": merged.get("Dirección") or merged.get("Steering"),
-            "tapizado": merged.get("Tapizado") or merged.get("InteriorType"),
-            "tipo_pago": merged.get("Tipo de pago") or merged.get("PaymentType"),
-            "descripcion": merged.get("Subtipo") or merged.get("Description"),
-            "url": merged.get("url"),
-            "fecha_ingreso": time.strftime("%Y-%m-%d %H:%M:%S"),
+        if not id_record:
+            id_record = f"PATIOTUERCA:{placa}:{anio}:{url}"
+
+        row = {
+            "id_record": id_record,
+            "source": "patiotuerca",
+            "fecha_scrape": _now_iso(),
+
+            "placa": placa,
+            "anio": anio,
+            "precio": _to_float(_pick(e, "precio", "price", "amount", default=0)),
+            "kilometraje": _to_int(_pick(e, "kilometraje", "kilometros", "km", "mileage", default=0)),
+            "marca": _norm_str(_pick(e, "marca", "brand", "make", default="ND"), default="ND"),
+            "modelo": _norm_str(_pick(e, "modelo", "model", default="ND"), default="ND"),
+            "ciudad": _norm_str(_pick(e, "ciudad", "city", default="ND"), default="ND"),
+
+            "color": _norm_str(_pick(e, "color", default="ND"), default="ND"),
+            "motor": _norm_str(_pick(e, "motor", "engine", default="ND"), default="ND"),
+            "transmision": _norm_str(_pick(e, "transmision", "transmission", default="ND"), default="ND"),
+            "traccion": _norm_str(_pick(e, "traccion", "drive", default="ND"), default="ND"),
+            "direccion": _norm_str(_pick(e, "direccion", default="ND"), default="ND"),
+
+            "url": url,
+            "productId": _norm_str(_pick(e, "productId", "product_id", default="1"), default="1"),
         }
-        print("Esto es out: ",out)
-        # --- Normalización de campos numéricos y texto ---
-        # Año
-        try:
-            if out["anio"]:
-                out["anio"] = int(str(out["anio"]).strip())
-        except Exception:
-            out["anio"] = None
 
-        # Precio
-        try:
-            if out["precio"]:
-                val = str(out["precio"]).replace("$", "").replace(".", "").replace(",", "").strip()
-                out["precio"] = float(val)
-        except Exception:
-            out["precio"] = None
+        # Defaults para columnas del modelo (si no vienen del portal)
+        row.setdefault("cilindraje", "ND")
+        row.setdefault("combustible", "ND")
+        row.setdefault("tapizado", "ND")
+        row.setdefault("tipo_pago", "CONTADO")
+        row.setdefault("descripcion", "ND")
+        row.setdefault("fecha_ingreso", _now_iso())
+        row.setdefault("json", "{}")
 
-        # Kilometraje
-        km_val = out.get("kilometraje")
-        if km_val:
-            try:
-                km_clean = str(km_val).lower().replace("kms", "").replace("km", "").replace(".", "").replace(",", "").strip()
-                out["kilometraje"] = int(km_clean)
-            except Exception:
-                out["kilometraje"] = None
+        return row
 
-        # Transmisión
-        if "transmision" in out and out["transmision"]:
-            val = str(out["transmision"]).lower()
-            if "auto" in val:
-                out["transmision"] = "Automática"
-            elif "manu" in val:
-                out["transmision"] = "Manual"
-            else:
-                out["transmision"] = None
 
-        # Cilindraje
-        if out.get("cilindraje"):
-            val = str(out["cilindraje"]).strip()
-            m = re.search(r"(\d{3,4})", val)
-            if m:
-                out["cilindraje"] = int(m.group(1))
-            else:
-                m2 = re.search(r"(\d{1,2}[\.,]\d)", val)
-                if m2:
-                    out["cilindraje"] = float(m2.group(1).replace(",", "."))
-                else:
-                    out["cilindraje"] = None
+# =====================================================
+# CONDELPI
+# =====================================================
 
-        # Limpiar strings vacíos
-        for k, v in out.items():
-            if isinstance(v, str) and not v.strip():
-                out[k] = None
+class CondelpiPayloadTranslator:
+    """
+    Convierte una row normalizada (salida de Autocor/PatioTuerca translators)
+    al payload requerido por Condelpi REVENTAS9.
+    """
+    def build_payload(self, row: Dict[str, Any]) -> Dict[str, Any]:
+        placa = str(row.get("placa", "")).strip()
+        anio = int(row.get("anio", 0) or 0)
+        km = int(row.get("kilometraje", row.get("kilometros", 0)) or 0)
+        precio = float(row.get("precio", 0) or 0)
+        url = str(row.get("url", row.get("link", ""))).strip()
 
-        # Guardar el JSON completo
-        out["json"] = json.dumps(rec, ensure_ascii=False)
-        print("Este es el out que sale: ",out)
-        return out
-    
-    def build_csv_row(self, rec: Dict[str, Any]) -> Dict[str, Any]:
-        # aquí simplemente devuelves lo traducido
-        return self.translate(rec)
+        # ✅ payload base (puedes ajustar si Condelpi exige campos específicos)
+        return {
+            "placa": placa,
+            "anio": anio,
+            "kilometros": km,
+            "precio": precio,
+            "url": url,
+            "productId": str(row.get("productId", "1")),
+
+            "marca": str(row.get("marca", "ND")),
+            "modelo": str(row.get("modelo", "ND")),
+            "traccion": str(row.get("traccion", "ND")),
+            "color": str(row.get("color", "ND")),
+            "motor": str(row.get("motor", "ND")),
+            "transmision": str(row.get("transmision", "ND")),
+            "direccion": str(row.get("direccion", "ND")),
+            "ciudad": str(row.get("ciudad", "ND")),
+
+            "json": str(row.get("json", "{}")),
+            "DATA": None,
+        }

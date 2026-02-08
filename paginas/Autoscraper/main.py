@@ -1,37 +1,80 @@
-# autocor_solid/main.py
+# paginas/Autoscraper/main.py
 from __future__ import annotations
-import argparse, os
-from dataclasses import dataclass
+import argparse
+
+# --------------------------------------------------
+# (Opcional) cargar .env
+# --------------------------------------------------
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+
 from paginas.Autoscraper.app import App, AppConfig
 from paginas.Autoscraper.dominio.politicas import ByDaysFreshnessPolicy
 from paginas.Autoscraper.dominio.servicios import MergeService
 from paginas.Autoscraper.dominio.modelo import ANIOS_OBJETIVO
-from paginas.Autoscraper.infraestructura.traductor import (
-    AutocorRecordTranslator,
-    PatioTuercaRecordTranslator,
+
+# --------------------------------------------------
+# IMPORTS SEGUROS DE TRADUCTORES
+# --------------------------------------------------
+from paginas.Autoscraper.infraestructura.traductor import AutocorRecordTranslator
+
+try:
+    from paginas.Autoscraper.infraestructura.traductor import PatioTuercaRecordTranslator
+except Exception:
+    PatioTuercaRecordTranslator = None
+
+# --------------------------------------------------
+# REPOSITORIOS
+# --------------------------------------------------
+from paginas.Autoscraper.infraestructura.repositorio import (
+    CsvRepository,
+    CondelpiRepository,
+    CompositeRepository,
 )
-from paginas.Autoscraper.infraestructura.repositorio import CsvRepository
-from paginas.Autoscraper.infraestructura.api_cliente import RequestsApiClient, DEFAULT_BASE_URL
+
+# --------------------------------------------------
+# CLIENTES API
+# --------------------------------------------------
+from paginas.Autoscraper.infraestructura.api_cliente import RequestsApiClient
 from paginas.Autoscraper.infraestructura.api_cliente_PatioTuerca import (
     PatioTuercaClientAdapter,
     RequestsWebClient,
 )
 
-# -------------------------
-# Configuración general
-# -------------------------
+from paginas.Autoscraper.infraestructura.AutosBDD.Api_Condelpi import (
+    CondelpiConfig,
+    CondelpiClient,
+)
 
 
-def parse_args() -> tuple[AppConfig, str]:
+# ==================================================
+# ARGUMENTOS
+# ==================================================
+def parse_args() -> tuple[AppConfig, str, str]:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--source", choices=["autocor", "patiotuerca"], default="autocor",
-                    help="Fuente de datos a procesar")
+
+    ap.add_argument(
+        "--source",
+        choices=["autocor", "patiotuerca"],
+        default="autocor",
+        help="Fuente de datos",
+    )
+
+    ap.add_argument(
+        "--sink",
+        choices=["csv", "condelpi"],
+        default="csv",
+        help="Destino: csv o condelpi",
+    )
+
     ap.add_argument("--base-url", default=None)
     ap.add_argument("--timeout", type=int, default=20)
     ap.add_argument("--retries", type=int, default=3)
-    ap.add_argument("--fresh-days", type=int, default=1,
-                    help="Días de vigencia de datos (para políticas de merge)")
-    ap.add_argument("--user-agent", default="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Scraper/1.0")
+    ap.add_argument("--fresh-days", type=int, default=1)
+    ap.add_argument("--user-agent", default="Mozilla/5.0 Autoscraper/1.0")
 
     args = ap.parse_args()
 
@@ -49,19 +92,19 @@ def parse_args() -> tuple[AppConfig, str]:
         user_agent=args.user_agent,
     )
 
-    return cfg, args.source
+    return cfg, args.source, args.sink
 
 
-# -------------------------
-# Ejecución principal
-# -------------------------
-
+# ==================================================
+# MAIN
+# ==================================================
 def main() -> None:
-    cfg, source = parse_args()
+    cfg, source, sink = parse_args()
 
-    # Selección de componentes según la fuente
+    # -------------------------
+    # FUENTE DE DATOS
+    # -------------------------
     if source == "autocor":
-        # --- AUTOCOR ---
         api = RequestsApiClient(
             base_url=cfg.base_url,
             user_agent=cfg.user_agent,
@@ -71,19 +114,53 @@ def main() -> None:
         translator = AutocorRecordTranslator()
         merger = MergeService(ByDaysFreshnessPolicy(cfg.fresh_days))
 
-    else:
-        # --- PATIOTUERCA ---
-        web_client = RequestsWebClient(user_agent=cfg.user_agent, timeout=cfg.timeout)
-        # años a scrapear → ajustable en modelo
-        api = PatioTuercaClientAdapter(web_client, anios=ANIOS_OBJETIVO)
+    elif source == "patiotuerca":
+        if PatioTuercaRecordTranslator is None:
+            raise RuntimeError(
+                "PatioTuercaRecordTranslator no existe en infraestructura/traductor.py"
+            )
+
+        web_client = RequestsWebClient(
+            user_agent=cfg.user_agent,
+            timeout=cfg.timeout,
+        )
+        api = PatioTuercaClientAdapter(
+            web_client,
+            anios=ANIOS_OBJETIVO,
+        )
         translator = PatioTuercaRecordTranslator()
         merger = MergeService(ByDaysFreshnessPolicy(cfg.fresh_days))
 
-    # Repositorio en CSV 
-    repo = CsvRepository(cfg.out_csv)
+    else:
+        raise RuntimeError(f"Source no soportado: {source}")
 
-    # Crear app y ejecutar
-    app = App(api=api, translator=translator, repo=repo, merger=merger)
+    # -------------------------
+    # DESTINO
+    # -------------------------
+    if sink == "csv":
+        repo = CsvRepository(cfg.out_csv)
+
+    else:
+        c_cfg = CondelpiConfig.from_env(
+            timeout=cfg.timeout,
+            retries=cfg.retries,
+        )
+        c_client = CondelpiClient(c_cfg)
+
+        state_repo = CsvRepository(cfg.out_csv)
+        sink_repo = CondelpiRepository(c_client)
+
+        repo = CompositeRepository(state_repo, sink_repo)
+
+    # -------------------------
+    # EJECUTAR
+    # -------------------------
+    app = App(
+        api=api,
+        translator=translator,
+        repo=repo,
+        merger=merger,
+    )
     app.run()
 
 

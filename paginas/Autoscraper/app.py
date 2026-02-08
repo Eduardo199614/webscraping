@@ -1,5 +1,7 @@
+# app.py (o donde tengas tu clase App)
 from __future__ import annotations
 from dataclasses import dataclass
+
 
 @dataclass
 class AppConfig:
@@ -10,12 +12,25 @@ class AppConfig:
     fresh_days: int
     user_agent: str
 
+
 class App:
-    def __init__(self, api, translator, repo, merger):
+    def __init__(self, api, translator, repo, merger, publisher=None):
         self.api = api
         self.translator = translator
         self.repo = repo
         self.merger = merger
+        self.publisher = publisher
+
+    def _publish_delta(self, delta_rows: list[dict], fuente: str) -> None:
+        if not self.publisher:
+            return
+        if not delta_rows:
+            return
+
+        res = self.publisher.publish(delta_rows, fuente=fuente)
+        print(f"  ☁ CONDELPI: enviados={res.get('enviados')} fallidos={res.get('fallidos')}")
+        if res.get("fallidos"):
+            print(f"  ⚠ Ejemplo fallo: {res['detalle_fallidos'][0]}")
 
     def run(self) -> None:
         """
@@ -37,13 +52,8 @@ class App:
     #  MODO BATCH: PATIOTUERCA
     # -----------------------
     def _run_patiotuerca_by_year(self) -> None:
-        """
-        PatioTuerca se procesa por lotes de año.
-        Se guarda el CSV después de cada año para no perder progreso.
-        """
         print("▶ Ejecutando en modo batch por año (PatioTuerca)")
 
-        # Cargar CSV existente una sola vez
         merged = self.repo.load()
         total_metrics = {"kept": 0, "updated": 0, "added": 0}
 
@@ -56,20 +66,23 @@ class App:
                 continue
 
             incoming_rows = [self.translator.build_csv_row(e) for e in entities]
+            merged, metrics, delta = self.merger.merge(merged, incoming_rows)
 
-            merged, metrics = self.merger.merge(merged, incoming_rows)
-
-            # Acumular métricas
             for k in ("kept", "updated", "added"):
                 total_metrics[k] += metrics.get(k, 0)
 
-            # Guardar después de cada año
-            self.repo.save(merged)
+            # Guardar delta (como ya lo haces)
+            self.repo.save(delta)
+
+            # ✅ NUEVO: enviar delta a Condelpi
+            self._publish_delta(delta, fuente="Patiotuerca")
+
             print(
                 f"  ✓ Año {anio}: total_now={metrics['total']} | "
-                f"kept={metrics['kept']} | updated={metrics['updated']} | added={metrics['added']}"
+                f"kept={metrics['kept']} | updated={metrics['updated']} | added={metrics['added']} | "
+                f"delta={len(delta)}"
             )
-            print(f"  ✓ CSV parcial guardado en: {self.repo.path}")
+            print(f"  ✓ Salida parcial en: {self.repo.path}")
 
         total = len(merged)
         print(
@@ -78,33 +91,24 @@ class App:
             f"Actualizadas: {total_metrics['updated']} | "
             f"Nuevas: {total_metrics['added']}"
         )
-        print(f"✓ CSV final: {self.repo.path}")
+        print(f"✓ Salida final: {self.repo.path}")
 
     # -----------------------
     #  MODO BATCH: AUTOCOR
     # -----------------------
     def _run_autocor_by_page(self) -> None:
-        """
-        Procesa Autocor por lotes de página.
-        Guarda el CSV después de cada página.
-        """
         print("▶ Ejecutando en modo batch por página (Autocor)")
 
         merged = self.repo.load()
         total_metrics = {"kept": 0, "updated": 0, "added": 0}
 
-        # Página 1
         page_count, entities_page1 = self.api.discover_first_page()
         print(f"  📄 Total de páginas reportadas: {page_count}")
 
-        # Procesar página 1
         pages = [(1, entities_page1)]
-
-        # Páginas 2...N
         for p in range(2, page_count + 1):
             pages.append((p, self.api.fetch_page(p)))
 
-        # Procesar lote por lote
         for page_num, page_entities in pages:
             print(f"\n📄 Procesando página {page_num}/{page_count}...")
 
@@ -113,19 +117,22 @@ class App:
                 continue
 
             incoming_rows = [self.translator.build_csv_row(e) for e in page_entities]
-            merged, metrics = self.merger.merge(merged, incoming_rows)
+            merged, metrics, delta = self.merger.merge(merged, incoming_rows)
 
-            # Acumular métricas totales
             for k in ("kept", "updated", "added"):
                 total_metrics[k] += metrics.get(k, 0)
 
-            # Guardado por página
-            self.repo.save(merged)
+            self.repo.save(delta)
+
+            # ✅ NUEVO: enviar delta a Condelpi
+            self._publish_delta(delta, fuente="Autocor")
+
             print(
                 f"  ✓ Página {page_num}: total_now={metrics['total']} | "
-                f"kept={metrics['kept']} | updated={metrics['updated']} | added={metrics['added']}"
+                f"kept={metrics['kept']} | updated={metrics['updated']} | added={metrics['added']} | "
+                f"delta={len(delta)}"
             )
-            print(f"  ✓ Guardado parcial en: {self.repo.path}")
+            print(f"  ✓ Salida parcial en: {self.repo.path}")
 
         total = len(merged)
         print(
@@ -134,14 +141,12 @@ class App:
             f"Actualizadas: {total_metrics['updated']} | "
             f"Nuevas: {total_metrics['added']}"
         )
-        print(f"✓ CSV final: {self.repo.path}")
+        print(f"✓ Salida final: {self.repo.path}")
 
     # -----------------------
     #  MODO MONOLÍTICO
     # -----------------------
     def _run_monolithic(self) -> None:
-        """Modo original (no batch)."""
-
         if hasattr(self.api, "fetch_all"):
             entities = self.api.fetch_all()
         else:
@@ -152,12 +157,16 @@ class App:
         incoming_rows = [self.translator.build_csv_row(e) for e in entities]
 
         existing = self.repo.load()
-        merged, metrics = self.merger.merge(existing, incoming_rows)
+        merged, metrics, delta = self.merger.merge(existing, incoming_rows)
 
-        self.repo.save(merged)
+        self.repo.save(delta)
+
+        # ✅ NUEVO: enviar delta a Condelpi
+        self._publish_delta(delta, fuente="Monolithic")
 
         print(
             f"✓ Merge completado → Total: {metrics['total']} | "
-            f"kept={metrics['kept']} | updated={metrics['updated']} | added={metrics['added']}"
+            f"kept={metrics['kept']} | updated={metrics['updated']} | added={metrics['added']} | "
+            f"delta={len(delta)}"
         )
-        print(f"✓ CSV: {self.repo.path}")
+        print(f"✓ Salida: {self.repo.path}")

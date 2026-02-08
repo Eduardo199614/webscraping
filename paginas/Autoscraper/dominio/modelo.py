@@ -1,15 +1,11 @@
-# autocor_solid/domain/models.py
+# paginas/Autoscraper/dominio/modelo.py
 from __future__ import annotations
-from typing import Optional
 import datetime
-#-Patiotuerca
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Optional, Dict, Any
 
-
-#--------------Autocor
+# ---------------- Autocor helpers (si los usas en otros lados)
 def parse_iso_dt(s: Optional[str]) -> Optional[datetime.datetime]:
-    """ISO flexible: soporta 'Z' → UTC y offsets. Devuelve tz-aware."""
     if not s:
         return None
     try:
@@ -24,27 +20,31 @@ def parse_iso_dt(s: Optional[str]) -> Optional[datetime.datetime]:
 def now_utc():
     return datetime.datetime.now(datetime.timezone.utc)
 
-
-
-
-#--------------- PatioTuerca
+# ---------------- PatioTuerca model (si lo usas)
 @dataclass
-class Vehiculo: #formato de como parsear_html de la clase en api_cliente_PatioTuerca devuelve la informacion (usado posterior a la llamada de parsear_html)
+class Vehiculo:
     id: str
     summary: Dict[str, Any]
     ficha_tecnica: Dict[str, Any]
     url: str
-# Años que vas a procesar en lotes
-ANIOS_OBJETIVO =   [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025] # ejemplo: 2015–2025 list(range(2015, 2026))
-#el [2015] para pruebas
-CSV_COLS = [ #Modificado al formato de datos completo pedido por el cliente (Como tenían en la base de PatioTuerca de ellos)
+
+# Años objetivo
+ANIOS_OBJETIVO = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+
+# ✅ CSV_COLS debe incluir TODO lo que producen tus translators + lo que Condelpi necesita
+CSV_COLS = [
     "id_record",
+    "source",
+    "fecha_scrape",
+
+    "placa",
     "marca",
     "modelo",
     "anio",
     "precio",
     "kilometraje",
     "ciudad",
+
     "transmision",
     "cilindraje",
     "combustible",
@@ -54,6 +54,11 @@ CSV_COLS = [ #Modificado al formato de datos completo pedido por el cliente (Com
     "tipo_pago",
     "descripcion",
     "fecha_ingreso",
+
+    "color",
+    "motor",
+    "productId",
+
     "url",
-    "json"
+    "json",
 ]

@@ -1,45 +1,60 @@
-# autocor_solid/domain/services.py
+# paginas/Autoscraper/dominio/servicios.py
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Dict, Any, Iterable, Tuple, List
-from .politicas import FreshnessPolicy
-from .modelo import now_utc
+from typing import Dict, Any, List, Tuple
 
-# patioTuerca_solid/domain/services.py
-
-@dataclass
 class MergeService:
-    freshness: FreshnessPolicy
+    def __init__(self, freshness_policy):
+        self.freshness_policy = freshness_policy
 
     def merge(
         self,
-        existing: Dict[str, Dict[str, str]],
-        incoming_rows: Iterable[Dict[str, Any]],
-        id_field: str = "id_record"
-    ) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, int]]:
-        """Funde datasets aplicando FreshnessPolicy; devuelve (merged, métricas)."""
-        ref = now_utc()
-        merged = dict(existing)
-        kept = updated = added = 0
+        existing_by_id: Dict[str, Dict[str, Any]],
+        incoming_rows: List[Dict[str, Any]],
+    ) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, int], Dict[str, Dict[str, Any]]]:
+        """
+        existing_by_id: estado actual (id_record -> row)
+        incoming_rows: filas nuevas a comparar
+
+        Retorna:
+        - merged_by_id (estado final)
+        - metrics
+        - delta_by_id (solo added/updated)
+        """
+        merged = dict(existing_by_id)  # copia
+        delta: Dict[str, Dict[str, Any]] = {}
+
+        kept = 0
+        updated = 0
+        added = 0
 
         for row in incoming_rows:
-            key = str(row.get(id_field, "")).strip()
-            if not key:
-                # Sin id: no aplica policy; igual se incorpora
-                phantom_key = f"__NOID__{id(row)}"
-                merged[phantom_key] = row
+            rid = str(row.get("id_record", "")).strip()
+            if not rid:
+                # si falta id_record, lo ignoramos (o podrías generarlo aquí)
+                continue
+
+            prev = merged.get(rid)
+
+            if prev is None:
+                merged[rid] = row
+                delta[rid] = row
                 added += 1
                 continue
 
-            if key in existing:
-                if self.freshness.is_fresh(existing[key], ref):
-                    kept += 1
-                else:
-                    merged[key] = row
-                    updated += 1
-            else:
-                merged[key] = row
-                added += 1
+            # si el previo está "fresco", lo conservamos
+            if self.freshness_policy.is_fresh(prev, row):
+                kept += 1
+                continue
 
-        metrics = {"kept": kept, "updated": updated, "added": added, "total": len(merged)}
-        return merged, metrics
+            # si no está fresco, actualizamos
+            merged[rid] = row
+            delta[rid] = row
+            updated += 1
+
+        metrics = {
+            "total": len(merged),
+            "kept": kept,
+            "updated": updated,
+            "added": added,
+        }
+        return merged, metrics, delta
