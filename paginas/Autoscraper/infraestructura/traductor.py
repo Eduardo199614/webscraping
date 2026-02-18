@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import Any, Dict
 from datetime import datetime
-import re
+import re, json
 def _now_iso() -> str:
     return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -59,7 +59,7 @@ def _to_float(x: Any, default: float = 0.0) -> float:
         s = s.replace(",", "")
 
     try:
-        return float(s) * 1000 #en miles
+        return float(s)
     except Exception:
         return default
 
@@ -76,6 +76,31 @@ def _merge_levels(*dicts: Dict[str, Any]) -> Dict[str, Any]:
             merged.update(d)
     return merged
 
+def _extract_cilindraje(version: str) -> Optional[str]:
+        if not version:
+            return None
+        m = re.search(r'(\d{1,2}[\.,]\d)', version)
+        if m:
+            return m.group(1).replace(",", ".")
+        m2 = re.search(r'\b(\d{1,2})\b(?=.*\s(L|litros|AC|TA|TM)\b|$)', version, flags=re.IGNORECASE)
+        if m2:
+            return m2.group(1)
+        return None
+
+def _infer_transmision(version: str, saving_plan_order: str) -> Optional[str]:
+        if saving_plan_order:
+            spo = saving_plan_order.strip().upper()
+            if "AUTOM" in spo:
+                return "Automática"
+            if "MANU" in spo:
+                return "Manual"
+        v = (version or "").upper()
+        if re.search(r'\bTA\b', v):
+            return "Automática"
+        if re.search(r'\bTM\b', v):
+            return "Manual"
+        return None
+
 
 # =====================================================
 # AUTOCOR
@@ -87,7 +112,7 @@ class AutocorRecordTranslator:
     """
     def build_csv_row(self, e: Dict[str, Any]) -> Dict[str, Any]:
         id_record = _norm_str(_pick(e, "id_record", "id", "uuid", "vehicleId", "pilotId", default=""))
-        placa = _norm_str(_pick(e, "placa", "plate", "licensePlate", default=""))
+        placa = _norm_str(_pick(e, "placa", "plate", "license_plate", default=""))
         url = _norm_str(_pick(e, "url", "link", "href", "detailUrl", default=""))
         anio = _to_int(_pick(e, "anio", "year", "modelYear", default=0))
 
@@ -101,31 +126,28 @@ class AutocorRecordTranslator:
 
             "placa": placa,
             "anio": anio,
-            "precio": _to_float(_pick(e, "precio", "price", "amount", default=0)),
-            "kilometraje": _to_int(_pick(e, "kilometraje", "kilometros", "km", "mileage", default=0)),
+            "precio": _to_float(_pick(e, "precio", "prices", "amount", default=0)),
+            "kilometraje": _to_int(_pick(e, "odometer", "kilometros", "km", "mileage", default=0)),
             "marca": _norm_str(_pick(e, "marca", "brand", "make", default="ND"), default="ND"),
             "modelo": _norm_str(_pick(e, "modelo", "model", default="ND"), default="ND"),
-            "ciudad": _norm_str(_pick(e, "ciudad", "city", default="ND"), default="ND"),
+            "climateSystem":_norm_str(_pick(e, "climateSystem", default="ND"), default="ND"),
+            "ciudad": _norm_str(_pick(e, "ciudad", "location", default="ND"), default="ND"),
 
             "color": _norm_str(_pick(e, "color", default="ND"), default="ND"),
-            "motor": _norm_str(_pick(e, "motor", "engine", default="ND"), default="ND"),
-            "transmision": _norm_str(_pick(e, "transmision", "transmission", default="ND"), default="ND"),
+            "motor": _norm_str(_extract_cilindraje(_pick(e, "version", default="ND")), default="ND"),
+            "transmision": _norm_str(_infer_transmision(_pick(e, "version",  default=""),_pick(e, "saving_plan_order",  default="")), default="ND"),
             "traccion": _norm_str(_pick(e, "traccion", "drive", default="ND"), default="ND"),
-            "direccion": _norm_str(_pick(e, "direccion", default="ND"), default="ND"),
-
-            "url": url,
-            "productId": _norm_str(_pick(e, "productId", "product_id", default="1"), default="1"),
+            "direccion": _norm_str(_pick(e, "location", "direccion", default="ND"), default="ND"),
+            "interiorType": _norm_str(_pick(e, "interiorType", "tapizado", default="ND"), default="ND"),
+            "fuelType": _norm_str(_pick(e, "fuel_name", "combustible", default="ND"), default="ND"),
+            "motorType":_norm_str(_pick(e, "motorType", "engine_number", default="ND"), default="ND"),
+            "typePago": _norm_str(_pick(e, "typePago", default="ND"), default="CONTADO"),
+            "productId": _norm_str(_pick(e, "id_record", "product_id", default="1"), default="1"),
+            "json": json.dumps(e,ensure_ascii = False)       
         }
 
         # Defaults para columnas del modelo (si no vienen del portal)
-        row.setdefault("cilindraje", "ND")
-        row.setdefault("combustible", "ND")
-        row.setdefault("tapizado", "ND")
-        row.setdefault("tipo_pago", "CONTADO")
-        row.setdefault("descripcion", "ND")
         row.setdefault("fecha_ingreso", _now_iso())
-        row.setdefault("json", "{}")
-
         return row
 
 
@@ -162,6 +184,7 @@ class PatioTuercaRecordTranslator:
             "kilometraje": _to_int(_pick(data, "Recorrido", "Kilometraje", "km", "Mileage", default=0)),
             "marca": _norm_str(_pick(data, "Marca", "brand", "make", default="ND"), default="ND"),
             "modelo": _norm_str(_pick(data, "Modelo", "model", default="ND"), default="ND"),
+            "climateSystem":_norm_str(_pick(e, "Sistema de climatización", default="ND"), default="ND"),
             "ciudad": _norm_str(_pick(data, "Ciudad", "city", default="ND"), default="ND"),
 
             "color": _norm_str(_pick(data, "Color", default="ND"), default="ND"),
@@ -169,19 +192,17 @@ class PatioTuercaRecordTranslator:
             "transmision": _norm_str(_pick(data, "Transmisión", "transmission", default="ND"), default="ND"),
             "traccion": _norm_str(_pick(data, "Tracción", "drive", default="ND"), default="ND"),
             "direccion": _norm_str(_pick(data, "Dirección", default="ND"), default="ND"),
-
+            "interiorType": _norm_str(_pick(data, "Tapizado", "InteriorType", default="ND"), default="ND"),
+            "fuelType": _norm_str(_pick(data, "Combustible", "FuelType", default="ND"), default="ND"),
+            "motorType": _norm_str(_pick(data, "Tipo de Motor", default="ND"), default="ND"),
+            "typePago": _norm_str(_pick(data, "Tipo de pago", "PaymentType", default="ND"), default="ND"),
             "url": url,
-            "productId": _norm_str(_pick(data, "ProductID", "product_id","Product_id", default="1"), default="1"),
+            "productId": _norm_str(_pick(data, "id_record", "product_id","Product_id", default="1"), default="1"),
+            "json": json.dumps(e,ensure_ascii = False)    
         }
 
         # Defaults para columnas del modelo (si no vienen del portal)
-        row.setdefault("cilindraje", "ND")
-        row.setdefault("combustible", "ND")
-        row.setdefault("tapizado", "ND")
-        row.setdefault("tipo_pago", "CONTADO")
-        row.setdefault("descripcion", "ND")
         row.setdefault("fecha_ingreso", _now_iso())
-        row.setdefault("json", "{}")
 
         return row
 
@@ -213,13 +234,17 @@ class CondelpiPayloadTranslator:
 
             "marca": str(row.get("marca", "ND")),
             "modelo": str(row.get("modelo", "ND")),
+            "climateSystem": str(row.get("climateSystem", "ND")),
             "traccion": str(row.get("traccion", "ND")),
             "color": str(row.get("color", "ND")),
             "motor": str(row.get("motor", "ND")),
             "transmision": str(row.get("transmision", "ND")),
             "direccion": str(row.get("direccion", "ND")),
             "ciudad": str(row.get("ciudad", "ND")),
-
+            "interiorType": str(row.get("interiorType", "ND")),
+            "fuelType": str(row.get("fuelType", "ND")),
+            "motorType": str(row.get("motorType", "ND")),
+            "typePago": str(row.get("typePago", "CONTADO")),
             "json": str(row.get("json", "{}")),
             "DATA": None,
         }
