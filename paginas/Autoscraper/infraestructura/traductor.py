@@ -1,7 +1,7 @@
 # paginas/Autoscraper/infraestructura/traductor.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from datetime import datetime
 import re, json
 def _now_iso() -> str:
@@ -22,21 +22,26 @@ def _to_int(x: Any, default: int = 0) -> int:
     if s == "":
         return default
 
-    # eliminar símbolos comunes
+    # eliminar todo lo que no sea número o separador
     s = re.sub(r"[^\d.,]", "", s)
 
     if s == "":
         return default
 
-    # normalizar separadores
-    if s.count(",") > s.count("."):
-        s = s.replace(".", "").replace(",", ".")
-    else:
+    # caso típico latino: 14.800 o 14,800
+    if "." in s and "," not in s:
+        s = s.replace(".", "")
+    elif "," in s and "." not in s:
         s = s.replace(",", "")
+    elif "," in s and "." in s:
+        if s.rfind(",") > s.rfind("."):
+            s = s.replace(".", "").replace(",", ".")
+        else:
+            s = s.replace(",", "")
 
     try:
         return int(float(s))
-    except Exception:
+    except:
         return default
 
 def _to_float(x: Any, default: float = 0.0) -> float:
@@ -113,7 +118,7 @@ class AutocorRecordTranslator:
     def build_csv_row(self, e: Dict[str, Any]) -> Dict[str, Any]:
         id_record = _norm_str(_pick(e, "id_record", "id", "uuid", "vehicleId", "pilotId", default=""))
         placa = _norm_str(_pick(e, "placa", "plate", "license_plate", default=""))
-        url = _norm_str(_pick(e, "url", "link", "href", "detailUrl", default=""))
+        url = _norm_str(_pick(e, "media", "link", "href", "detailUrl","url", default=""))
         anio = _to_int(_pick(e, "anio", "year", "modelYear", default=0))
 
         if not id_record:
@@ -126,7 +131,7 @@ class AutocorRecordTranslator:
 
             "placa": placa,
             "anio": anio,
-            "precio": _to_float(_pick(e, "precio", "prices", "amount", default=0)),
+            "precio": _to_int(_pick(e, "precio", "prices", "amount", default=0)),
             "kilometraje": _to_int(_pick(e, "odometer", "kilometros", "km", "mileage", default=0)),
             "marca": _norm_str(_pick(e, "marca", "brand", "make", default="ND"), default="ND"),
             "modelo": _norm_str(_pick(e, "modelo", "model", default="ND"), default="ND"),
@@ -136,18 +141,19 @@ class AutocorRecordTranslator:
             "color": _norm_str(_pick(e, "color", default="ND"), default="ND"),
             "motor": _norm_str(_extract_cilindraje(_pick(e, "version", default="ND")), default="ND"),
             "transmision": _norm_str(_infer_transmision(_pick(e, "version",  default=""),_pick(e, "saving_plan_order",  default="")), default="ND"),
-            "traccion": _norm_str(_pick(e, "traccion", "drive", default="ND"), default="ND"),
-            "direccion": _norm_str(_pick(e, "location", "direccion", default="ND"), default="ND"),
+            "traccion": _norm_str(_pick(e, "accesories","traccion", "drive", default="ND"), default="ND"),
             "interiorType": _norm_str(_pick(e, "interiorType", "tapizado", default="ND"), default="ND"),
             "fuelType": _norm_str(_pick(e, "fuel_name", "combustible", default="ND"), default="ND"),
             "motorType":_norm_str(_pick(e, "motorType", "engine_number", default="ND"), default="ND"),
             "typePago": _norm_str(_pick(e, "typePago", default="ND"), default="CONTADO"),
-            "productId": _norm_str(_pick(e, "id_record", "product_id", default="1"), default="1"),
+            "url": url,
+            "productId": _norm_str(_pick(e, "id", "product_id", default="1"), default="1"),
             "json": json.dumps(e,ensure_ascii = False)       
         }
 
         # Defaults para columnas del modelo (si no vienen del portal)
         row.setdefault("fecha_ingreso", _now_iso())
+        row.setdefault("direccion", "ND")
         return row
 
 
@@ -180,7 +186,7 @@ class PatioTuercaRecordTranslator:
 
             "placa": placa,
             "anio": anio,
-            "precio": _to_float(_pick(data, "Precio", "CashPrice", "Precio Contado", default=0)),
+            "precio": _to_int(_pick(data, "Precio", "CashPrice", "Precio Contado", default=0)),
             "kilometraje": _to_int(_pick(data, "Recorrido", "Kilometraje", "km", "Mileage", default=0)),
             "marca": _norm_str(_pick(data, "Marca", "brand", "make", default="ND"), default="ND"),
             "modelo": _norm_str(_pick(data, "Modelo", "model", default="ND"), default="ND"),
@@ -227,7 +233,7 @@ class CondelpiPayloadTranslator:
         return {
             "placa": placa,
             "anio": anio,
-            "kilometros": km,
+            "kilometraje": km,
             "precio": precio,
             "url": url,
             "productId": str(row.get("productId", "1")),
