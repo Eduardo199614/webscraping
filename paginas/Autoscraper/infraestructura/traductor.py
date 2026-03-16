@@ -153,7 +153,7 @@ class AutocorRecordTranslator:
 
         # Defaults para columnas del modelo (si no vienen del portal)
         row.setdefault("fecha_ingreso", _now_iso())
-        row.setdefault("direccion", "ND")
+        row.setdefault("direccion", None)
         return row
 
 
@@ -238,19 +238,19 @@ class CondelpiPayloadTranslator:
             "url": url,
             "productId": str(row.get("productId", "1")),
 
-            "marca": str(row.get("marca", "ND")),
-            "modelo": str(row.get("modelo", "ND")),
-            "climateSystem": str(row.get("climateSystem", "ND")),
-            "traccion": str(row.get("traccion", "ND")),
-            "color": str(row.get("color", "ND")),
-            "motor": str(row.get("motor", "ND")),
-            "transmision": str(row.get("transmision", "ND")),
-            "direccion": str(row.get("direccion", "ND")),
-            "ciudad": str(row.get("ciudad", "ND")),
-            "interiorType": str(row.get("interiorType", "ND")),
-            "fuelType": str(row.get("fuelType", "ND")),
-            "motorType": str(row.get("motorType", "ND")),
-            "typePago": str(row.get("typePago", "CONTADO")),
+            "marca": row.get("marca", None),
+            "modelo": row.get("modelo", None),
+            "climateSystem": row.get("climateSystem", None),
+            "traccion": row.get("traccion", None),
+            "color": row.get("color", None),
+            "motor":row.get("motor", None),
+            "transmision": row.get("transmision", None),
+            "direccion": row.get("direccion", None),
+            "ciudad": row.get("ciudad", None),
+            "interiorType": row.get("interiorType", None),
+            "fuelType": row.get("fuelType", None),
+            "motorType": row.get("motorType", None),
+            "typePago": row.get("typePago", "CONTADO"),
             "json": str(row.get("json", "{}")),
             "DATA": None,
         }
