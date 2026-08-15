@@ -186,7 +186,7 @@ class PatioTuercaRecordTranslator:
 
             "placa": placa,
             "anio": anio,
-            "precio": _to_int(_pick(data, "Precio", "CashPrice", "Precio Contado", default=0)),
+            "precio": _to_int(_pick(data, "Precio", "CashPrice", "Precio contado", default=0)),
             "kilometraje": _to_int(_pick(data, "Recorrido", "Kilometraje", "km", "Mileage", default=0)),
             "marca": _norm_str(_pick(data, "Marca", "brand", "make", default="ND"), default="ND"),
             "modelo": _norm_str(_pick(data, "Modelo", "model", default="ND"), default="ND"),

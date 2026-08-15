@@ -5,7 +5,7 @@ from paginas.Autoscraper.dominio.modelo import Vehiculo
 import requests
 import re
 import time, base64, json
-
+from urllib.parse import urljoin
 URL_BASE = ["https://ecuador.patiotuerca.com/usados/-/autos",
             "https://ecuador.patiotuerca.com/usados/-/pesados"]
  
@@ -25,9 +25,11 @@ class RequestsWebClient(WebClient):
         return resp.text
  
 #---------------------------Extracción de las urls para sacar data---------------------------
-def generar_codigo_base64(n: int) -> str:
-    """Codifica un número de página en base64, como usa PatioTuerca."""
-    return base64.b64encode(str(n).encode()).decode()
+"""def generar_codigo_base64(n: int) -> str:
+    #Codifica un número de página en base64, como usa PatioTuerca.
+    return base64.b64encode(str(n).encode()).decode()"""
+
+#Actualmente ya no se usa esto
  
  
 class PatioTuercaRepositorio():
@@ -40,46 +42,40 @@ class PatioTuercaRepositorio():
         self.pausa = pausa
  
     def _extraer_urls_vehiculos(self, url_pagina: str) -> List[str]:
-        """Extrae URLs de fichas de vehículos a partir del JSON-LD embebido en la página."""
+        #Extrae las URLs de todos los vehículos presentes en la página.
+
         html = self.web.fetch_html(url_pagina)
         soup = BeautifulSoup(html, "html.parser")
- 
-        urls = []
-        for script in soup.find_all("script", {"type": "application/ld+json"}):
-            try:
-                data = json.loads(script.string)
-                # Algunos scripts tienen una lista de objetos, otros un dict
-                if isinstance(data, list):
-                    for item in data:
-                        if item.get("@type") == "Car" and "url" in item:
-                            urls.append(item["url"])
-                elif isinstance(data, dict):
-                    if data.get("@type") == "Car" and "url" in data:
-                        urls.append(data["url"])
-            except Exception:
-                continue
- 
-        return urls
+
+        base_url = "https://ecuador.patiotuerca.com"
+
+        urls = set()
+
+        for a in soup.select('a[href^="/vehicle/"]'):
+            href = a.get("href")
+            if href:
+                urls.add(urljoin(base_url, href))
+
+        return sorted(urls)
  
     def obtener_vehiculos_por_anio(self, anio: int) -> List[Vehiculo]:
         """Recorre las páginas de resultados para un año específico y extrae las fichas completas."""
         todas_urls = [] #almacenar todas las urls
         for i in URL_BASE:
             print(f"🚗 Buscando vehículos del año {anio} de la url base: {i}")
-            base_url = f"{i}/-/-/-/{anio}"
- 
+            base_url = f"{i}?year_min={anio}&year_max={anio}"
+            base_url_pagina = i
             for pagina in range(1, self.num_paginas + 1):
                 # Construye la URL de la página actual
                 if pagina == 1:
                     url_pagina = base_url
                 else:
-                    codigo = generar_codigo_base64(pagina - 1)
-                    url_pagina = f"{base_url}?page={codigo}"
+                    url_pagina = f"{base_url_pagina}?page={pagina}&year_min=2015&year_max=2015"
  
                 print(f"🔎 Página {pagina}: {url_pagina}")
                 try:
                     urls = self._extraer_urls_vehiculos(url_pagina)
-                    if not urls:
+                    if len(urls) <= 3:
                         print(f"⚠️ No hay más resultados para {anio}")
                         break
                     todas_urls.extend(urls)
@@ -127,33 +123,60 @@ class FichaExtractor:
     @staticmethod
     def extraer_summary(soup: BeautifulSoup) -> Dict[str, Any]:
         data = {}
-        section = soup.find("section", id="summary")
+
+        # Buscar la sección cuyo h2 termina con "resumen"
+        section = None
+        for sec in soup.find_all("section"):
+            h2 = sec.find("h2")
+            if h2 and h2.get_text(strip=True).lower().endswith("resumen"):
+                section = sec
+                break
+
         if not section:
             return data
 
-        for div in section.find_all("div", class_="col"):
-            small = div.find("small")
-            if not small:
-                continue
-            nombre = small.get_text(strip=True)
-            valor = div.get_text(strip=True).replace(nombre, "").strip()
-            data[nombre] = valor
+        # Cada dato tiene:
+        # <p class="text-muted...">Nombre</p>
+        # <p class="font-medium...">Valor</p>
+
+        for div in section.find_all("div"):
+            ps = div.find_all("p", recursive=False)
+
+            if len(ps) >= 2:
+                nombre = ps[0].get_text(strip=True)
+                valor = ps[1].get_text(strip=True)
+
+                if nombre:
+                    data[nombre] = valor
+
         return data
 
     @staticmethod
     def extraer_ficha_tecnica(soup: BeautifulSoup) -> Dict[str, Any]:
         data = {}
-        ficha = soup.find("section", id="technicalData")
-        if not ficha:
-            return data
-        
-        for p in ficha.find_all("p", class_="m-none"):
-            nombre = p.find("small")
-            valor = p.find("span")
-            if nombre and valor:
-                data[nombre.get_text(strip=True)] = valor.get_text(strip=True)
-        return data
 
+        # Buscar el h2 "Especificaciones"
+        h2 = soup.find("h2", string=lambda s: s and s.strip() == "Especificaciones")
+
+        if not h2:
+            return data
+
+        # El siguiente div contiene todas las tarjetas
+        contenedor = h2.find_next("div")
+
+        if not contenedor:
+            return data
+
+        for card in contenedor.find_all("div", class_=lambda c: c and "rounded-xl" in c):
+            nombre = card.find("span")
+            valor = card.find("p", class_=lambda c: c and "font-semibold" in c)
+
+            if nombre and valor:
+                data[
+                    nombre.get_text(strip=True)
+                ] = valor.get_text(strip=True)
+
+        return data
     @staticmethod
     def parsear_html(html: str, url: str) -> Dict[str, Any]:
         soup = BeautifulSoup(html, "html.parser")
