@@ -34,9 +34,9 @@ class RequestsWebClient(WebClient):
  
 class PatioTuercaRepositorio():
     """Repositorio que obtiene vehículos por año desde PatioTuerca."""
- 
+
     def __init__(self, web_client: RequestsWebClient, pausa: int = 2, num_paginas: int = 300): #modificar la cantidad de páginas o el tiempo de pausa aquí de ser necesario.
- 
+
         self.web = web_client
         self.num_paginas = num_paginas
         self.pausa = pausa
@@ -217,7 +217,7 @@ class PatioTuercaClientAdapter:
             # Convertimos los Vehiculo (dataclasses o dicts) a diccionarios simples
             for v in vehiculos:
                 all_entities.append({
-                    "id": v.id,
+                    "id_record": v.id,
                     "summary": v.summary,
                     "ficha_tecnica": v.ficha_tecnica,
                     "url":v.url
