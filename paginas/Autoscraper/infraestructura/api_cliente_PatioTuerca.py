@@ -70,7 +70,7 @@ class PatioTuercaRepositorio():
                 if pagina == 1:
                     url_pagina = base_url
                 else:
-                    url_pagina = f"{base_url_pagina}?page={pagina}&year_min=2015&year_max=2015"
+                    url_pagina = f"{base_url_pagina}?page={pagina}&year_min={anio}&year_max={anio}"
  
                 print(f"🔎 Página {pagina}: {url_pagina}")
                 try:

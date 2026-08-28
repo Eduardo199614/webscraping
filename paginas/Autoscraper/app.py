@@ -72,7 +72,7 @@ class App:
                 total_metrics[k] += metrics.get(k, 0)
 
             # Guardar delta (como ya lo haces)
-            self.repo.save(delta)
+            self.repo.save(merged)
 
             # ✅ NUEVO: enviar delta a Condelpi
             self._publish_delta(delta, fuente="Patiotuerca")
@@ -122,7 +122,7 @@ class App:
             for k in ("kept", "updated", "added"):
                 total_metrics[k] += metrics.get(k, 0)
 
-            self.repo.save(delta)
+            self.repo.save(merged)
 
             # ✅ NUEVO: enviar delta a Condelpi
             self._publish_delta(delta, fuente="Autocor")
@@ -159,7 +159,7 @@ class App:
         existing = self.repo.load()
         merged, metrics, delta = self.merger.merge(existing, incoming_rows)
 
-        self.repo.save(delta)
+        self.repo.save(merged)
 
         # ✅ NUEVO: enviar delta a Condelpi
         self._publish_delta(delta, fuente="Monolithic")

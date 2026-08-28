@@ -29,7 +29,7 @@ class Vehiculo:
     url: str
 
 # Años objetivo
-ANIOS_OBJETIVO = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+ANIOS_OBJETIVO = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
 
 # ✅ CSV_COLS debe incluir TODO lo que producen tus translators + lo que Condelpi necesita
 CSV_COLS = [
@@ -40,6 +40,7 @@ CSV_COLS = [
     "placa",
     "marca",
     "modelo",
+    "anio",
     "kilometraje",
     "climateSystem",
     "ciudad",
